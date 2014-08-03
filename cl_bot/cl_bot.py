@@ -11,7 +11,7 @@ SLEEP_SECONDS = 90
 
 def find_cl_post():
     cl_post = {}
-    driver = webdriver.Firefox()
+    driver = webdriver.PhantomJS()
     driver.get("https://sacramento.craigslist.org/zip/")
     # assert "Python" in driver.title
     
