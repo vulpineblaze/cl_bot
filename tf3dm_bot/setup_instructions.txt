@@ -1,2 +1,5 @@
 sudo apt-get install xvfb
 sudo apt-get install phantomjs
+
+
+# source tf3dm/bin/activate
