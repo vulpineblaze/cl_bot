@@ -3,6 +3,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
+from urlparse import urlparse
+from urlparse import parse_qs
 
 from pyvirtualdisplay import Display
 import time
@@ -12,7 +14,7 @@ import base64
 import gc
 
 SLEEP_SECONDS = 90
-DRIVER_TIMEOUT = 2
+DRIVER_TIMEOUT = 5
 
 
 
@@ -73,6 +75,17 @@ def find_model():
 
         break #only run once during dev
 
+    o = urlparse(the_link)
+    print "o is:"
+    print o
+    the_query = parse_qs(o.query)
+    print the_query
+    the_id = str(the_query['id'][0])
+    print "id:" + the_id
+    # print "link id is:" + str(o.id)
+    dl_link = "https://archive3d.net/?a=download&do=get&id=" + the_id
+    print "dl_link is:" + dl_link
+
     driver.quit()
 
     return model
@@ -118,6 +131,43 @@ def grab_stuff_from_link(the_link):
 
     print "info: " + str(info.text)+" | "+str(info.get_attribute("href"))
     print "info class: "+ str(info.get_attribute("class"))
+    # print "info h2: "+str(info.find_elements_by_tag_name("h2")[0])
+    h2 = info.find_elements_by_tag_name("h2")[0]
+    if h2:
+        print "info h2: "+str(h2.text)
+
+    # for each in info:
+    #     print "info child:"+ each
+    # links=[]
+    tmp = info.find_elements_by_tag_name("a")
+    for tag in tmp:
+        # maybe_link = tag.get_attribute("href")
+        if tag.text:
+            print "tmp.tag.text: " + str(tag.text)
+        else:
+            print "tmp.tag: " + str(tag)
+            maybe_link = tag.get_attribute("href")
+
+            if maybe_link:
+                # links.append(str(maybe_link.text))
+                print "maybe_link: " + str(maybe_link)
+
+        # tag_link = tag.find_element_by_css_selector('a').get_attribute('href')
+        # print "tag link: " + str(the_link)
+
+
+
+    # print "info tag: "+str(tag)
+
+    # count = 0
+    # for child in a:
+    #     # model['title'] = str(child.text)
+    #     # model['link'] = str(child.get_attribute("href"))
+    #     print "child: " + str(child.text)+" | "+str(child.get_attribute("href"))
+
+    #     print "child class: "+ str(child.get_attribute("class"))
+
+    #     break #only run once during dev
 
 
 
@@ -131,8 +181,11 @@ def main():
 
     model = find_model()
 
-    for the_link in model:
-        break
+    # for the_link in model:
+    #     # break
+    #     grab_stuff_from_link(the_link)
+    # grab_stuff_from_link("https://archive3d.net/?a=download&id=f8c7417c")
+
 
         
     
