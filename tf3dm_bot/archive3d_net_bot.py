@@ -79,7 +79,7 @@ def find_model():
     print "o is:"
     print o
     the_query = parse_qs(o.query)
-    print the_query
+    print the_query 
     the_id = str(the_query['id'][0])
     print "id:" + the_id
     # print "link id is:" + str(o.id)
