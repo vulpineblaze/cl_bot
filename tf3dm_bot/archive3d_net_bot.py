@@ -36,10 +36,11 @@ class Model(Document):
     desc =  StringField(max_length=1200, required=True)
     link =  URLField(max_length=1200, required=True)
     tags = StringField()
+    thumb_src = StringField()
     thumb = FileField()
     file = FileField()
 
-def model_saver(desc,link,tags):
+def model_saver(desc,link,tags,thumb_src):
     condition = True
 
     for link in Model.objects(link=link):
@@ -68,8 +69,9 @@ def model_saver(desc,link,tags):
         
 
     if condition:
-        this_model = Model(desc=desc,link=link,tags=tags)
+        this_model = Model(desc=desc,link=link,tags=tags,thumb_src=thumb_src)
         this_model.file.new_file()
+        this_model.thumb.new_file()
         # this_model.file.write('some_image_data')
 
         response = urlopen(link)
@@ -81,6 +83,17 @@ def model_saver(desc,link,tags):
             this_model.file.write(chunk)
 
         this_model.file.close()
+        this_model.save()
+
+        response = urlopen(thumb_src)
+        CHUNK = 16 * 1024
+        while True:
+            chunk = response.read(CHUNK)
+            if not chunk:
+                break
+            this_model.thumb.write(chunk)
+
+        this_model.thumb.close()
         this_model.save()
 
         # debug
@@ -146,7 +159,10 @@ def find_model(list_of_models, page_cnt = 1):
         if DEBUG: print "child class: "+ str(child.get_attribute("class"))
         the_link = child.find_element_by_css_selector('a').get_attribute('href')
         if DEBUG: print "child link: " + str(the_link)
+        the_thumb = child.find_element_by_css_selector('img').get_attribute('src')
+        if DEBUG: print "child the_thumb: " + str(the_thumb)
         model['desc'] = str(child.text)
+        model['thumb_src'] = str(the_thumb)
 
         if count >= 1:
             break #only run 5 during dev
@@ -167,7 +183,7 @@ def find_model(list_of_models, page_cnt = 1):
 
         #last thing in the loop!
         # list_of_models.append(model)
-        model_saver(model['desc'],model['link'],model['tags'])
+        model_saver(model['desc'],model['link'],model['tags'],model['thumb_src'])
 
         count += 1
 
@@ -302,32 +318,37 @@ def main():
 
     print list_of_models
 
+
+    #really this whole block for debug
     lastpost=""
+    do_once = False # true for debug
     for post in Model.objects:
         print post.desc +" | "+ post.link
         lastpost = post
 
+        if do_once:
+            do_once = False
+            print "lastpost: "+lastpost.link + ", and file:"+str(lastpost.file)
+            CHUNK = 16 * 1024
+            with open(post.desc+"_model.ext", 'wb') as f:
+                while True:
+                    chunk = lastpost.file.read(CHUNK)
+                    if not chunk:
+                        break
+
+                    f.write(chunk) 
+            with open(post.desc+"_thumb.jpg", 'wb') as f:
+                while True:
+                    chunk = lastpost.thumb.read(CHUNK)
+                    if not chunk:
+                        break
+
+                    f.write(chunk) 
+
         # for dev, dont want db permanent:
         post.delete()
-    # for the_link in list_of_models:
-    #     # break
-    #     grab_tags_from_link(the_link)
-    # grab_tags_from_link("https://archive3d.net/?a=download&id=f8c7417c")
-     
 
-    print "lastpost: "+lastpost.link + ", and file:"+str(lastpost.file)
-    CHUNK = 16 * 1024
-    with open(post.desc+"_model.ext", 'wb') as f:
-        while True:
-            file = lastpost.file.read()
-            for c in file.chunks():
-                f.write(c.data)
-            # chunk = lastpost.file.read(CHUNK)
-            # if not chunk:
-            #     break
-            # # this_model.file.write(chunk)
-            # # chunk = lastpost.file.read()
-            # f.write(chunk) 
+    
     
     
     display.stop()
